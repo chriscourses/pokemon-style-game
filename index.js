@@ -1,6 +1,5 @@
 const canvas = document.querySelector('canvas')
 const c = canvas.getContext('2d')
-console.log(battleZonesData)
 
 canvas.width = 1024
 canvas.height = 576
@@ -136,7 +135,7 @@ const battle = {
 }
 
 function animate() {
-  window.requestAnimationFrame(animate)
+  const animationId = window.requestAnimationFrame(animate)
   background.draw()
   boundaries.forEach((boundary) => {
     boundary.draw()
@@ -149,6 +148,8 @@ function animate() {
 
   let moving = true
   player.moving = false
+
+  console.log(animationId)
   if (battle.initiated) return
 
   // activate a battle
@@ -175,7 +176,26 @@ function animate() {
         Math.random() < 0.01
       ) {
         console.log('activate battle')
+
+        // deactivate current animation loop
+        window.cancelAnimationFrame(animationId)
+
         battle.initiated = true
+        gsap.to('#overlappingDiv', {
+          opacity: 1,
+          repeat: 3,
+          yoyo: true,
+          duration: 0.4,
+          onComplete() {
+            gsap.to('#overlappingDiv', {
+              opacity: 1,
+              duration: 0.4
+            })
+
+            // activate a new animation loop
+            animateBattle()
+          }
+        })
         break
       }
     }
@@ -292,6 +312,11 @@ function animate() {
   }
 }
 animate()
+
+function animateBattle() {
+  window.requestAnimationFrame(animateBattle)
+  console.log('animating battle')
+}
 
 let lastKey = ''
 window.addEventListener('keydown', (e) => {
