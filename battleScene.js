@@ -43,17 +43,12 @@ document.querySelectorAll('button').forEach((button) => {
       renderedSprites
     })
 
-    queue.push(() => {
-      draggle.attack({
-        attack: attacks.Tackle,
-        recipient: emby,
-        renderedSprites
-      })
-    })
+    const randomAttack =
+      draggle.attacks[Math.floor(Math.random() * draggle.attacks.length)]
 
     queue.push(() => {
       draggle.attack({
-        attack: attacks.Fireball,
+        attack: randomAttack,
         recipient: emby,
         renderedSprites
       })
