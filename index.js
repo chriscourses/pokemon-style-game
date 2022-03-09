@@ -50,8 +50,6 @@ battleZonesMap.forEach((row, i) => {
   })
 })
 
-console.log(battleZones)
-
 const image = new Image()
 image.src = './img/Pellet Town.png'
 
@@ -87,7 +85,6 @@ const player = new Sprite({
     down: playerDownImage
   }
 })
-console.log(player)
 
 const background = new Sprite({
   position: {
@@ -150,7 +147,6 @@ function animate() {
   let moving = true
   player.animate = false
 
-  console.log(animationId)
   if (battle.initiated) return
 
   // activate a battle
@@ -176,10 +172,12 @@ function animate() {
         overlappingArea > (player.width * player.height) / 2 &&
         Math.random() < 0.01
       ) {
-        console.log('activate battle')
-
         // deactivate current animation loop
         window.cancelAnimationFrame(animationId)
+
+        audio.Map.stop()
+        audio.initBattle.play()
+        audio.battle.play()
 
         battle.initiated = true
         gsap.to('#overlappingDiv', {
@@ -358,5 +356,13 @@ window.addEventListener('keyup', (e) => {
     case 'd':
       keys.d.pressed = false
       break
+  }
+})
+
+let clicked = false
+addEventListener('click', () => {
+  if (!clicked) {
+    audio.Map.play()
+    clicked = true
   }
 })
