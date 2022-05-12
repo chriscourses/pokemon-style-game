@@ -14,6 +14,12 @@ for (let i = 0; i < battleZonesData.length; i += 70) {
   battleZonesMap.push(battleZonesData.slice(i, 70 + i))
 }
 
+const charactersMap = []
+for (let i = 0; i < charactersMapData.length; i += 70) {
+  charactersMap.push(charactersMapData.slice(i, 70 + i))
+}
+console.log(charactersMap)
+
 const boundaries = []
 const offset = {
   x: -735,
@@ -47,6 +53,64 @@ battleZonesMap.forEach((row, i) => {
           }
         })
       )
+  })
+})
+
+const characters = []
+const villagerImg = new Image()
+villagerImg.src = './img/villager/Idle.png'
+
+const oldManImg = new Image()
+oldManImg.src = './img/oldMan/Idle.png'
+
+charactersMap.forEach((row, i) => {
+  row.forEach((symbol, j) => {
+    // 1026 === villager
+    if (symbol === 1026) {
+      characters.push(
+        new Sprite({
+          position: {
+            x: j * Boundary.width + offset.x,
+            y: i * Boundary.height + offset.y
+          },
+          image: villagerImg,
+          frames: {
+            max: 4,
+            hold: 60
+          },
+          scale: 3,
+          animate: true
+        })
+      )
+    }
+    // 1031 === oldMan
+    else if (symbol === 1031) {
+      characters.push(
+        new Sprite({
+          position: {
+            x: j * Boundary.width + offset.x,
+            y: i * Boundary.height + offset.y
+          },
+          image: oldManImg,
+          frames: {
+            max: 4,
+            hold: 60
+          },
+          scale: 3
+        })
+      )
+    }
+
+    if (symbol !== 0) {
+      boundaries.push(
+        new Boundary({
+          position: {
+            x: j * Boundary.width + offset.x,
+            y: i * Boundary.height + offset.y
+          }
+        })
+      )
+    }
   })
 })
 
@@ -117,7 +181,21 @@ const keys = {
   }
 }
 
-const movables = [background, ...boundaries, foreground, ...battleZones]
+const movables = [
+  background,
+  ...boundaries,
+  foreground,
+  ...battleZones,
+  ...characters
+]
+const renderables = [
+  background,
+  ...boundaries,
+  ...battleZones,
+  ...characters,
+  player,
+  foreground
+]
 
 function rectangularCollision({ rectangle1, rectangle2 }) {
   return (
@@ -134,15 +212,9 @@ const battle = {
 
 function animate() {
   const animationId = window.requestAnimationFrame(animate)
-  background.draw()
-  boundaries.forEach((boundary) => {
-    boundary.draw()
+  renderables.forEach((renderable) => {
+    renderable.draw()
   })
-  battleZones.forEach((battleZone) => {
-    battleZone.draw()
-  })
-  player.draw()
-  foreground.draw()
 
   let moving = true
   player.animate = false
