@@ -197,15 +197,6 @@ const renderables = [
   foreground
 ]
 
-function rectangularCollision({ rectangle1, rectangle2 }) {
-  return (
-    rectangle1.position.x + rectangle1.width >= rectangle2.position.x &&
-    rectangle1.position.x <= rectangle2.position.x + rectangle2.width &&
-    rectangle1.position.y <= rectangle2.position.y + rectangle2.height &&
-    rectangle1.position.y + rectangle1.height >= rectangle2.position.y
-  )
-}
-
 const battle = {
   initiated: false
 }
@@ -282,6 +273,12 @@ function animate() {
     player.animate = true
     player.image = player.sprites.up
 
+    checkForCharacterCollision({
+      characters,
+      player,
+      characterOffset: { x: 0, y: 3 }
+    })
+
     for (let i = 0; i < boundaries.length; i++) {
       const boundary = boundaries[i]
       if (
@@ -308,6 +305,12 @@ function animate() {
   } else if (keys.a.pressed && lastKey === 'a') {
     player.animate = true
     player.image = player.sprites.left
+
+    checkForCharacterCollision({
+      characters,
+      player,
+      characterOffset: { x: 3, y: 0 }
+    })
 
     for (let i = 0; i < boundaries.length; i++) {
       const boundary = boundaries[i]
@@ -336,6 +339,12 @@ function animate() {
     player.animate = true
     player.image = player.sprites.down
 
+    checkForCharacterCollision({
+      characters,
+      player,
+      characterOffset: { x: 0, y: -3 }
+    })
+
     for (let i = 0; i < boundaries.length; i++) {
       const boundary = boundaries[i]
       if (
@@ -362,6 +371,12 @@ function animate() {
   } else if (keys.d.pressed && lastKey === 'd') {
     player.animate = true
     player.image = player.sprites.right
+
+    checkForCharacterCollision({
+      characters,
+      player,
+      characterOffset: { x: -3, y: 0 }
+    })
 
     for (let i = 0; i < boundaries.length; i++) {
       const boundary = boundaries[i]

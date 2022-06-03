@@ -13,8 +13,8 @@ class Sprite {
     this.image = new Image()
     this.frames = { ...frames, val: 0, elapsed: 0 }
     this.image.onload = () => {
-      this.width = this.image.width / this.frames.max
-      this.height = this.image.height
+      this.width = (this.image.width / this.frames.max) * scale
+      this.height = this.image.height * scale
     }
     this.image.src = image.src
 
@@ -41,7 +41,7 @@ class Sprite {
 
     const crop = {
       position: {
-        x: this.frames.val * this.width,
+        x: this.frames.val * (this.width / this.scale),
         y: 0
       },
       width: this.image.width / this.frames.max,
