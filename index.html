@@ -8,6 +8,7 @@
   <style>
     * {
       font-family: 'Press Start 2P', cursive;
+      box-sizing: border-box;
     }
 
     body {
@@ -47,6 +48,20 @@
   ></div>
 
   <canvas></canvas>
+  <div
+    id="characterDialogueBox"
+    style="
+      background-color: white;
+      height: 140px;
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      border-top: 4px black solid;
+      display: none;
+      padding: 12px;
+    "
+  ></div>
 
   <div id="userInterface" style="display: none">
     <!-- Represents health bar of draggle (enemy) -->
