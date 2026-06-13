@@ -1,0 +1,66 @@
+---
+# clang-tidy configuration for carnage3d
+# Run with: clang-tidy src/*.cpp -- -std=c++17 -Isrc <other includes>
+
+Checks: >
+  -*,
+  bugprone-*,
+  -bugprone-easily-swappable-parameters,
+  -bugprone-narrowing-conversions,
+  cppcoreguidelines-avoid-goto,
+  cppcoreguidelines-init-variables,
+  cppcoreguidelines-no-malloc,
+  cppcoreguidelines-prefer-member-initializer,
+  cppcoreguidelines-slicing,
+  modernize-avoid-bind,
+  modernize-loop-convert,
+  modernize-make-unique,
+  modernize-make-shared,
+  modernize-pass-by-value,
+  modernize-redundant-void-arg,
+  modernize-replace-auto-ptr,
+  modernize-use-bool-literals,
+  modernize-use-default-member-init,
+  modernize-use-emplace,
+  modernize-use-equals-default,
+  modernize-use-equals-delete,
+  modernize-use-nodiscard,
+  modernize-use-nullptr,
+  modernize-use-override,
+  performance-faster-string-find,
+  performance-for-range-copy,
+  performance-implicit-conversion-in-loop,
+  performance-inefficient-algorithm,
+  performance-inefficient-string-concatenation,
+  performance-inefficient-vector-operation,
+  performance-move-const-arg,
+  performance-move-constructor-init,
+  performance-no-automatic-move,
+  performance-trivially-destructible,
+  performance-type-promotion-in-math-fn,
+  performance-unnecessary-copy-initialization,
+  performance-unnecessary-value-param,
+  readability-avoid-const-params-in-decls,
+  readability-const-return-type,
+  readability-container-size-empty,
+  readability-delete-null-pointer,
+  readability-else-after-return,
+  readability-make-member-function-const,
+  readability-misleading-indentation,
+  readability-redundant-control-flow,
+  readability-redundant-smartptr-get,
+  readability-simplify-boolean-expr,
+  readability-string-compare
+
+WarningsAsErrors: ''
+
+CheckOptions:
+  - key: modernize-loop-convert.MinConfidence
+    value: reasonable
+  - key: readability-else-after-return.WarnOnUnfixable
+    value: false
+  - key: performance-for-range-copy.WarnOnAllAutoCopies
+    value: false
+
+# Suppress warnings from third-party code
+HeaderFilterRegex: '^(?!.*third_party)(?!.*Box2D).*$'

@@ -1,0 +1,11 @@
+.gradle/
+.idea/
+local.properties
+app/build/
+build/
+*.iml
+*.keystore
+# WASM-Assets werden nicht ins Repo committed – via setup-assets.sh kopieren
+app/src/main/assets/carnage3D.wasm
+app/src/main/assets/carnage3D.js
+app/src/main/assets/carnage3D.data

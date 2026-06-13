@@ -1,0 +1,429 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <title>Carnage3D – GTA1 Remake</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #111;
+      color: #ccc;
+      font-family: 'Segoe UI', Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      padding: 16px;
+      overflow-x: hidden;
+    }
+
+    h1 {
+      font-size: 1.6rem;
+      color: #e8c84a;
+      letter-spacing: 2px;
+      margin: 12px 0 6px;
+      text-shadow: 0 0 12px #e8c84a88;
+    }
+
+    .subtitle {
+      font-size: 0.8rem;
+      color: #666;
+      margin-bottom: 14px;
+    }
+
+    #canvas-wrapper {
+      position: relative;
+      border: 2px solid #333;
+      background: #000;
+      max-width: 100%;
+    }
+
+    canvas {
+      display: block;
+      background: #000;
+      border: 0 none;
+      max-width: 100%;
+      height: auto;
+    }
+
+    /* Lade-Overlay */
+    #loader {
+      position: absolute;
+      inset: 0;
+      background: rgba(0,0,0,0.92);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      z-index: 10;
+    }
+
+    #loader.hidden { display: none; }
+
+    #loader-title {
+      font-size: 1.3rem;
+      color: #e8c84a;
+      letter-spacing: 3px;
+    }
+
+    #status-text {
+      font-size: 0.85rem;
+      color: #aaa;
+      min-height: 1.2em;
+    }
+
+    .progress-bar-track {
+      width: 300px;
+      height: 10px;
+      background: #222;
+      border: 1px solid #444;
+      border-radius: 5px;
+      overflow: hidden;
+    }
+
+    #progress-bar {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #c8a020, #e8c84a);
+      border-radius: 5px;
+      transition: width 0.2s ease;
+    }
+
+    #error-box {
+      display: none;
+      margin-top: 10px;
+      padding: 10px 16px;
+      background: #3a0000;
+      border: 1px solid #880000;
+      border-radius: 4px;
+      color: #ff8888;
+      font-size: 0.85rem;
+      max-width: 1024px;
+      width: 100%;
+      text-align: center;
+    }
+
+    /* Desktop-Steuerungsanzeige */
+    #controls {
+      margin-top: 14px;
+      max-width: 1024px;
+      width: 100%;
+      background: #1a1a1a;
+      border: 1px solid #2a2a2a;
+      border-radius: 6px;
+      padding: 12px 16px;
+      font-size: 0.8rem;
+    }
+
+    #controls h2 {
+      font-size: 0.85rem;
+      color: #e8c84a;
+      margin-bottom: 8px;
+      letter-spacing: 1px;
+    }
+
+    .ctrl-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 4px 24px;
+    }
+
+    .ctrl-row { display: flex; gap: 8px; align-items: baseline; }
+    .key {
+      display: inline-block;
+      background: #2a2a2a;
+      border: 1px solid #444;
+      border-radius: 3px;
+      padding: 1px 6px;
+      font-size: 0.75rem;
+      color: #ddd;
+      white-space: nowrap;
+      min-width: 50px;
+      text-align: center;
+    }
+    .ctrl-desc { color: #888; }
+
+    #req-note {
+      margin-top: 10px;
+      font-size: 0.75rem;
+      color: #555;
+      text-align: center;
+    }
+
+    /* ── Touch-Gamepad (nur auf Touch-Geräten sichtbar) ── */
+    #touch-gamepad {
+      display: none;
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      height: 180px;
+      pointer-events: none;
+      z-index: 200;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    /* D-Pad links */
+    #dpad {
+      position: absolute;
+      left: 16px;
+      bottom: 16px;
+      width: 132px;
+      height: 132px;
+      pointer-events: all;
+    }
+
+    .dpad-btn {
+      position: absolute;
+      width: 42px;
+      height: 42px;
+      background: rgba(255,255,255,0.12);
+      border: 1px solid rgba(255,255,255,0.25);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      color: rgba(255,255,255,0.7);
+      touch-action: none;
+      cursor: pointer;
+      transition: background 0.08s;
+    }
+    .dpad-btn.active { background: rgba(255,255,255,0.35); }
+
+    #dpad-up    { left: 45px; top: 0; }
+    #dpad-left  { left: 0;    top: 45px; }
+    #dpad-right { left: 90px; top: 45px; }
+    #dpad-down  { left: 45px; top: 90px; }
+    #dpad-center {
+      position: absolute;
+      left: 45px; top: 45px;
+      width: 42px; height: 42px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 8px;
+    }
+
+    /* Action-Buttons rechts */
+    #action-pad {
+      position: absolute;
+      right: 16px;
+      bottom: 16px;
+      display: grid;
+      grid-template-columns: repeat(3, 48px);
+      grid-gap: 6px;
+      pointer-events: all;
+    }
+
+    .action-btn {
+      width: 48px;
+      height: 48px;
+      background: rgba(232,200,74,0.15);
+      border: 1px solid rgba(232,200,74,0.35);
+      border-radius: 8px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 1px;
+      font-size: 9px;
+      color: #e8c84a;
+      touch-action: none;
+      cursor: pointer;
+      transition: background 0.08s;
+    }
+    .action-btn.active { background: rgba(232,200,74,0.4); }
+    .action-btn .icon { font-size: 17px; line-height: 1; }
+
+    /* Touch-Gerät: Gamepad einblenden, Desktop-Controls ausblenden */
+    @media (pointer: coarse) {
+      #touch-gamepad { display: block; }
+      #controls      { display: none; }
+      body           { padding: 0; }
+      h1, .subtitle, #req-note { display: none; }
+      #canvas-wrapper { border: none; width: 100vw; }
+      canvas { width: 100vw !important; height: auto !important; }
+    }
+  </style>
+</head>
+<body>
+
+  <h1>CARNAGE3D</h1>
+  <p class="subtitle">Open-Source GTA1 Remake &nbsp;·&nbsp; WebAssembly-Version</p>
+
+  <div id="canvas-wrapper">
+    <canvas id="canvas" oncontextmenu="event.preventDefault()" tabindex="-1"
+            width="1024" height="768"></canvas>
+
+    <div id="loader">
+      <div id="loader-title">LADE SPIEL&hellip;</div>
+      <div class="progress-bar-track">
+        <div id="progress-bar"></div>
+      </div>
+      <div id="status-text">Initialisierung&hellip;</div>
+    </div>
+  </div>
+
+  <div id="error-box"></div>
+
+  <div id="controls">
+    <h2>STEUERUNG</h2>
+    <div class="ctrl-grid">
+      <div class="ctrl-row"><span class="key">↑ ↓ ← →</span><span class="ctrl-desc">Laufen / Fahren</span></div>
+      <div class="ctrl-row"><span class="key">Enter</span><span class="ctrl-desc">Auto ein-/aussteigen</span></div>
+      <div class="ctrl-row"><span class="key">Space</span><span class="ctrl-desc">Aufs Auto springen</span></div>
+      <div class="ctrl-row"><span class="key">Z / X</span><span class="ctrl-desc">Waffe wechseln</span></div>
+      <div class="ctrl-row"><span class="key">Ctrl</span><span class="ctrl-desc">Schießen</span></div>
+      <div class="ctrl-row"><span class="key">Tab</span><span class="ctrl-desc">Blaulicht ein/aus</span></div>
+      <div class="ctrl-row"><span class="key">W A S D</span><span class="ctrl-desc">Freie Kamera</span></div>
+    </div>
+  </div>
+
+  <p id="req-note">Benötigt WebGL 2 &nbsp;·&nbsp; Desktop: Chrome 85+ / Firefox 81+&nbsp;·&nbsp; Android: Chrome 88+</p>
+
+  <!-- Touch-Gamepad (wird via CSS nur auf Touch-Geräten angezeigt) -->
+  <div id="touch-gamepad">
+    <div id="dpad">
+      <div class="dpad-btn" id="dpad-up"    data-code="ArrowUp"       data-keycode="38">▲</div>
+      <div class="dpad-btn" id="dpad-left"  data-code="ArrowLeft"     data-keycode="37">◀</div>
+      <div class="dpad-btn" id="dpad-right" data-code="ArrowRight"    data-keycode="39">▶</div>
+      <div class="dpad-btn" id="dpad-down"  data-code="ArrowDown"     data-keycode="40">▼</div>
+      <div id="dpad-center"></div>
+    </div>
+    <div id="action-pad">
+      <div class="action-btn" data-code="Enter"       data-keycode="13"><span class="icon">🚗</span>Enter</div>
+      <div class="action-btn" data-code="Space"       data-keycode="32"><span class="icon">⬆</span>Space</div>
+      <div class="action-btn" data-code="Tab"         data-keycode="9" ><span class="icon">💡</span>Tab</div>
+      <div class="action-btn" data-code="KeyZ"        data-keycode="90"><span class="icon">🔫</span>Z</div>
+      <div class="action-btn" data-code="KeyX"        data-keycode="88"><span class="icon">🔀</span>X</div>
+      <div class="action-btn" data-code="ControlLeft" data-keycode="17"><span class="icon">💥</span>Shoot</div>
+    </div>
+  </div>
+
+  <script>
+    // ── Touch-Gamepad: sendet Keyboard-Events an den Canvas ──────────────────
+    (function () {
+      var canvas = document.getElementById('canvas');
+
+      function fireKey(code, keyCode, down) {
+        var type = down ? 'keydown' : 'keyup';
+        var ev = new KeyboardEvent(type, {
+          bubbles: true, cancelable: true,
+          code: code, key: code,
+          keyCode: keyCode, which: keyCode
+        });
+        // An beide Ziele senden: Emscripten lauscht auf document UND canvas
+        document.dispatchEvent(ev);
+        canvas.dispatchEvent(ev);
+      }
+
+      document.querySelectorAll('.dpad-btn, .action-btn').forEach(function (btn) {
+        var code = btn.dataset.code;
+        var kc   = parseInt(btn.dataset.keycode, 10);
+
+        function onStart(e) {
+          e.preventDefault();
+          btn.classList.add('active');
+          fireKey(code, kc, true);
+        }
+        function onEnd(e) {
+          e.preventDefault();
+          btn.classList.remove('active');
+          fireKey(code, kc, false);
+        }
+
+        btn.addEventListener('touchstart',  onStart, { passive: false });
+        btn.addEventListener('touchend',    onEnd,   { passive: false });
+        btn.addEventListener('touchcancel', onEnd,   { passive: false });
+        btn.addEventListener('mousedown',   onStart);
+        btn.addEventListener('mouseup',     onEnd);
+        btn.addEventListener('mouseleave',  onEnd);
+      });
+    })();
+
+    // ── Emscripten Module-Konfiguration ──────────────────────────────────────
+    var Module = {
+      preRun:  [],
+      postRun: [],
+
+      canvas: (function () {
+        var canvas = document.getElementById('canvas');
+        canvas.addEventListener('webglcontextlost', function (e) {
+          showError('WebGL-Kontext verloren. Bitte Seite neu laden.');
+          e.preventDefault();
+        }, false);
+        return canvas;
+      })(),
+
+      print: function (text) {
+        if (arguments.length > 1) text = Array.prototype.slice.call(arguments).join(' ');
+        console.log(text);
+      },
+
+      printErr: function (text) {
+        if (arguments.length > 1) text = Array.prototype.slice.call(arguments).join(' ');
+        console.error(text);
+      },
+
+      setStatus: function (text) {
+        if (!Module.setStatus.last) Module.setStatus.last = { time: Date.now(), text: '' };
+        if (text === Module.setStatus.last.text) return;
+
+        var m = text.match(/([^(]+)\((\d+(\.\d+)?)\/(\d+)\)/);
+        var now = Date.now();
+        if (m && now - Module.setStatus.last.time < 30) return;
+
+        Module.setStatus.last.time = now;
+        Module.setStatus.last.text = text;
+
+        var statusEl = document.getElementById('status-text');
+        if (statusEl) statusEl.textContent = text || 'Bereit.';
+
+        if (!text) {
+          var loader = document.getElementById('loader');
+          if (loader) loader.classList.add('hidden');
+          // Canvas nach dem Laden den Fokus geben (wichtig für Tastatureingaben)
+          document.getElementById('canvas').focus();
+        }
+      },
+
+      totalDependencies: 0,
+      monitorRunDependencies: function (left) {
+        this.totalDependencies = Math.max(this.totalDependencies, left);
+        var total = this.totalDependencies;
+        var done  = total - left;
+        var pct   = total > 0 ? Math.round((done / total) * 100) : 0;
+
+        document.getElementById('progress-bar').style.width = pct + '%';
+
+        Module.setStatus(left
+          ? 'Lade Daten… (' + done + '/' + total + ')'
+          : 'Alle Daten geladen.'
+        );
+      }
+    };
+
+    Module.setStatus('Herunterladen…');
+
+    window.onerror = function () {
+      showError('Fehler aufgetreten – siehe Browser-Konsole (F12).');
+      Module.setStatus = function (text) {
+        if (text) console.error('[nach Fehler] ' + text);
+      };
+    };
+
+    function showError(msg) {
+      var box = document.getElementById('error-box');
+      box.textContent = msg;
+      box.style.display = 'block';
+    }
+  </script>
+  <script async src="carnage3D.js"></script>
+
+</body>
+</html>
